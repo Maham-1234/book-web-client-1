@@ -18,7 +18,7 @@ type CategoryResponse = {
  * @returns An object containing an array of categories, each with a `children` property.
  */
 export const fetchCategoryTree = async (): Promise<CategoryTreeResponse> => {
-  return apiClient.get<CategoryTreeResponse>("/categories");
+  return apiClient.get<CategoryTreeResponse>("/category");
 };
 
 /**
@@ -29,7 +29,7 @@ export const fetchCategoryTree = async (): Promise<CategoryTreeResponse> => {
 export const fetchCategoryById = async (
   categoryId: number
 ): Promise<CategoryResponse> => {
-  return apiClient.get<CategoryResponse>(`/categories/${categoryId}`);
+  return apiClient.get<CategoryResponse>(`/category/${categoryId}`);
 };
 
 /**
@@ -41,7 +41,7 @@ export const createCategory = async (
   data: CreateCategoryData
 ): Promise<CategoryResponse> => {
   return apiClient.post<CategoryResponse, CreateCategoryData>(
-    "/categories",
+    "/category",
     data
   );
 };
@@ -57,7 +57,7 @@ export const updateCategory = async (
   data: UpdateCategoryData
 ): Promise<CategoryResponse> => {
   return apiClient.put<CategoryResponse, UpdateCategoryData>(
-    `/categories/${categoryId}`,
+    `/category/${categoryId}`,
     data
   );
 };
@@ -68,5 +68,5 @@ export const updateCategory = async (
  * @param categoryId - The ID of the category to delete.
  */
 export const deleteCategory = async (categoryId: number): Promise<void> => {
-  return apiClient.delete<void>(`/categories/${categoryId}`);
+  return apiClient.delete<void>(`/category/${categoryId}`);
 };

@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   Moon,
   Sun,
+  ListOrderedIcon,
 } from "lucide-react";
 
 const ThemeToggleButton = () => {
@@ -75,7 +76,7 @@ export default function Navbar() {
   const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
       <Link
-        to="/books" // Changed from /events
+        to="/books"
         className={
           isMobile
             ? "text-lg"
@@ -86,7 +87,7 @@ export default function Navbar() {
         Books
       </Link>
       <Link
-        to="/stationery" // Added new link
+        to="/stationary"
         className={
           isMobile
             ? "text-lg"
@@ -179,8 +180,16 @@ export default function Navbar() {
                   </DropdownMenuItem>
                   {!isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/user/orders">
+                      <Link to="/cart">
                         <ShoppingCart className="mr-2 h-4 w-4" />
+                        <span>My Cart</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {!isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/myOrders">
+                        <ListOrderedIcon className="mr-2 h-4 w-4" />
                         <span>My Orders</span>
                       </Link>
                     </DropdownMenuItem>

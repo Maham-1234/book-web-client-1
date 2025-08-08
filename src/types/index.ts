@@ -84,7 +84,7 @@ export interface Order {
   updatedAt: string;
 }
 
-export type Reviewer = Pick<User, "id" | "firstName">;
+export type Reviewer = Pick<User, "id" | "firstName" | "avatar">;
 
 export interface Review {
   id: string;
@@ -201,11 +201,15 @@ export interface CartContextType {
   cart: Cart | null;
   isLoading: boolean;
   error: string | null;
-  fetchCart: () => Promise<void>;
-  addItem: (data: AddItemToCartData) => Promise<void>;
-  updateItem: (itemId: string, data: UpdateCartItemData) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
-  clearCart: () => Promise<void>;
+  itemCount: number | null;
+  cartTotal: number | null;
+  isUpdatingItem: string | null;
+  loadCart: () => Promise<void>;
+  addToCart: (productId: string, quantity: number) => Promise<void>;
+  updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: string) => Promise<void>;
+  emptyCart: () => Promise<void>;
+  clearError: () => void;
 }
 export interface ProductContextType {
   products: Product[];
@@ -221,13 +225,21 @@ export interface ProductContextType {
 
 export interface OrderContextType {
   orders: Order[];
-  order: Order | null;
+  currentOrder: Order | null;
+  paginatedOrders: PaginatedResponse<Order> | null;
   isLoading: boolean;
+  isUpdating: boolean;
   error: string | null;
-  createOrder: (data: CreateOrderData) => Promise<Order | undefined>; // Returns the new order
-  fetchUserOrders: () => Promise<void>;
-  fetchOrderById: (orderId: string) => Promise<void>;
-  clearOrder: () => void;
+  placeOrder: (data: CreateOrderData) => Promise<Order>;
+  fetchMyOrders: () => Promise<void>;
+  fetchOrderDetails: (orderId: string) => Promise<void>;
+  fetchAllAdminOrders: (page?: number, limit?: number) => Promise<void>;
+  updateStatusAdmin: (
+    orderId: string,
+    status: Order["status"]
+  ) => Promise<void>;
+  clearCurrentOrder: () => void;
+  cancelUserOrder: (orderId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -238,6 +250,17 @@ export interface CategoryContextType {
   fetchCategoryTree: () => Promise<void>;
 }
 
+export interface ReviewContextType {
+  reviews: Review[];
+  isLoading: boolean;
+  error: string | null;
+  getReviews: (productId: string) => Promise<void>;
+  addReview: (data: CreateReviewData) => Promise<void>;
+  editReview: (reviewId: string, data: UpdateReviewData) => Promise<void>;
+  removeReview: (reviewId: string) => Promise<void>;
+
+  clearError: () => void;
+}
 export interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
