@@ -9,7 +9,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  avatar?: string; // Optional, can be null if not set
+  avatar?: string;
 }
 
 export interface Category {
@@ -149,8 +149,9 @@ type StationeryData = Pick<
   Product,
   "name" | "description" | "price" | "sku" | "stock" | "categoryId" | "brand"
 > & { productType: "Stationary" };
-export type CreateProductData = BookData | StationeryData;
-
+export type CreateProductData = (BookData | StationeryData) & {
+  images?: File[];
+};
 export type UpdateProductData = Partial<CreateProductData>;
 
 export interface CreateCategoryData {
@@ -219,7 +220,8 @@ export interface ProductContextType {
   error: string | null;
   fetchAllProducts: (filters?: ProductFilters) => Promise<void>;
   fetchProductById: (id: string) => Promise<void>;
-  clearProduct: () => void; // To clear the single product view
+  clearProduct: () => void;
+  createProduct: (data: CreateProductData) => Promise<Product>;
   clearError: () => void;
 }
 

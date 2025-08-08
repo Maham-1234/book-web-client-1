@@ -12,11 +12,14 @@ import type {
   ProductFilters,
   PaginatedResponse,
   ApiErrorResponse,
+  CreateProductData,
 } from "../types";
 
 import {
   fetchProducts as apiFetchProducts,
   fetchProductById as apiFetchProductById,
+  createProductText as apiCreateProductText,
+  uploadProductImages as apiUploadProductImages,
 } from "../api/modules/product";
 
 export const ProductContext = createContext<ProductContextType | undefined>(
@@ -90,12 +93,41 @@ export function ProductProvider({ children }: ProductProviderProps) {
     }
   }, []);
 
-  /**
-   * Clears the single product state. Useful when navigating away from a detail page.
-   */
   const clearProduct = useCallback(() => {
     setProduct(null);
   }, []);
+
+  const createProduct = useCallback(
+    async (data: CreateProductData): Promise<Product> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { images, ...textData } = data;
+
+        const textResponse = await apiCreateProductText(textData);
+        const newProduct = textResponse.product;
+
+        if (images && images.length > 0) {
+          const imageResponse = await apiUploadProductImages(
+            newProduct.id,
+            images
+          );
+          return imageResponse.product;
+        }
+
+        return newProduct;
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        const errorMessage = apiError.message || "Failed to create product.";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const value: ProductContextType = {
     products,
@@ -105,6 +137,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
     error,
     fetchAllProducts,
     fetchProductById,
+    createProduct,
     clearProduct,
     clearError,
   };

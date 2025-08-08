@@ -49,14 +49,36 @@ export const fetchProductById = async (
  * @param data - The data for the new product.
  * @returns The newly created product data.
  */
-export const createProduct = async (
-  data: CreateProductData
+export const createProductText = async (
+  data: Omit<CreateProductData, "images">
 ): Promise<ProductResponse> => {
-  return apiClient.post<ProductResponse, CreateProductData>("/product", data);
+  // This function sends JSON, not FormData
+  return apiClient.post<ProductResponse>("/product", data);
 };
 
 /**
- * [Admin] Updates an existing product.
+ * [Admin] Uploads images for an existing product.
+ * @param productId - The ID of the product to associate the images with.
+ * @param images - An array of File objects to upload.
+ * @returns The updated product data with new image URLs.
+ */
+export const uploadProductImages = async (
+  productId: string,
+  images: File[]
+): Promise<ProductResponse> => {
+  const formData = new FormData();
+  for (const file of images) {
+    formData.append("images", file);
+  }
+
+  return apiClient.post<ProductResponse>(
+    `/product/upload/${productId}`,
+    formData
+  );
+};
+
+/**
+ * [Admin] Updates an existing product, with optional new image uploads.
  * @param productId - The UUID of the product to update.
  * @param data - The product data to update.
  * @returns The updated product data.
@@ -65,10 +87,9 @@ export const updateProduct = async (
   productId: string,
   data: UpdateProductData
 ): Promise<ProductResponse> => {
-  return apiClient.put<ProductResponse, UpdateProductData>(
-    `/product/${productId}`,
-    data
-  );
+  const { images, ...textData } = data;
+
+  return apiClient.put<ProductResponse>(`/product/${productId}`, textData);
 };
 
 /**

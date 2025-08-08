@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { useCart } from "@/contexts/cartContext";
 import { Button } from "@/components/ui/button";
 import {

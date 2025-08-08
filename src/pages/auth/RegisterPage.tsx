@@ -153,7 +153,7 @@ const RegisterPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate("/user/home", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 

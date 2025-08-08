@@ -166,7 +166,7 @@ const OrderSuccessPage: FC = () => {
           <Link to="/">Continue Shopping</Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link to="/orders">View My Orders</Link>
+          <Link to="/myOrders">View My Orders</Link>
         </Button>
       </div>
     </div>
