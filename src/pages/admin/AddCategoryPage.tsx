@@ -34,7 +34,27 @@ export default function CreateCategoryPage() {
         toast.success("Category created successfully!");
       }
     } catch (error) {
-      toast.error(`error: ${error.message}`);
+      let message = "An unknown error occurred.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "message" in error.response.data
+      ) {
+        message = (error as any)?.response?.data?.message ?? message;
+      }
+
+      toast.error(`Error: ${message}`);
     }
   };
 
