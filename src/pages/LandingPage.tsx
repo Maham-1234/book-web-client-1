@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { SectionHeader } from "@/components/PageComponents/SectionHeader";
 import { StatsCard } from "../components/PageComponents/StatsCard";
-import { ProductCard } from "../components/PageComponents/product/ProductCard"; // Adjust path if needed
+import { ProductCard } from "../components/PageComponents/product/ProductCard";
 
 import {
   BookOpen,

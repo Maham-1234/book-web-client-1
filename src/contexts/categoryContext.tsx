@@ -6,9 +6,20 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Category, CategoryContextType, ApiErrorResponse } from "../types";
+import type {
+  Category,
+  CategoryContextType,
+  ApiErrorResponse,
+  CreateCategoryData,
+  UpdateCategoryData,
+} from "../types";
 
-import { fetchCategoryTree as apiFetchCategoryTree } from "../api/modules/category";
+import {
+  fetchCategoryTree as apiFetchCategoryTree,
+  createCategory as apiCreateCategory,
+  updateCategory as apiUpdateCategory,
+  deleteCategory as apiDeleteCategory,
+} from "../api/modules/category";
 
 export const CategoryContext = createContext<CategoryContextType | undefined>(
   undefined
@@ -36,12 +47,83 @@ export function CategoryProvider({ children }: CategoryProviderProps) {
       setIsLoading(false);
     }
   }, []);
+  const createCategory = useCallback(
+    async (data: CreateCategoryData) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const formattedData = {
+          ...data,
+          parentId:
+            data.parentId === undefined ||
+            data.parentId === null ||
+            data.parentId === ""
+              ? null
+              : typeof data.parentId === "string"
+              ? Number(data.parentId)
+              : data.parentId,
+        };
+
+        console.log("create category data", formattedData);
+        await apiCreateCategory(data);
+        await fetchCategoryTree();
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        setError(apiError.message || "Failed to create category.");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchCategoryTree]
+  );
+
+  const updateCategory = useCallback(
+    async (categoryId: number, data: UpdateCategoryData) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        await apiUpdateCategory(categoryId, data);
+        // Refresh categories after update
+        await fetchCategoryTree();
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        setError(apiError.message || "Failed to update category.");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchCategoryTree]
+  );
+
+  const deleteCategory = useCallback(
+    async (categoryId: number) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        await apiDeleteCategory(categoryId);
+        // Refresh categories after delete
+        await fetchCategoryTree();
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        setError(apiError.message || "Failed to delete category.");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchCategoryTree]
+  );
 
   const value: CategoryContextType = {
     categoryTree,
     isLoading,
     error,
     fetchCategoryTree,
+    createCategory,
+    updateCategory,
+    deleteCategory,
   };
 
   return (

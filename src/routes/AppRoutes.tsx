@@ -17,6 +17,10 @@ import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import MyOrdersPage from "@/pages/MyOrdersPage";
 import ViewOrderDetailsPage from "@/pages/ViewOrderDetailsPage";
 import ProfilePage from "@/pages/ProfilePage";
+import AdminDashboardPage from "@/pages/admin/AdminDashboard";
+import AddProductPage from "@/pages/admin/AddProductPage";
+import ManageProductPage from "@/pages/admin/ManageProductPage";
+import AddCategoryPage from "@/pages/admin/AddCategoryPage";
 
 const AppRoutes = () => {
   return (
@@ -79,8 +83,10 @@ const AppRoutes = () => {
       />
 
       <Route element={<RoleGuard allowedRoles={["admin"]} />}>
-        {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
-        {/* <Route path="/admin/products" element={<ProductManagementPage />} /> */}
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/product/create" element={<AddProductPage />} />
+        <Route path="/admin/product/edit/:id" element={<ManageProductPage />} />
+        <Route path="/admin/category/create" element={<AddCategoryPage />} />
       </Route>
 
       <Route path="*" element={<div>404 - Page Not Found</div>} />

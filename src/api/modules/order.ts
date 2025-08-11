@@ -60,7 +60,9 @@ export const fetchAllOrders = async (
     limit: limit.toString(),
   });
   // Note: The backend route for this might be protected by admin middleware (e.g., /api/admin/orders)
-  return apiClient.get<AllOrdersResponse>(`/order/all?${params.toString()}`);
+  return apiClient.get<AllOrdersResponse>(
+    `/order/admin/all?${params.toString()}`
+  );
 };
 
 /**
@@ -74,7 +76,7 @@ export const updateOrderStatus = async (
   data: UpdateOrderStatusData
 ): Promise<OrderResponse> => {
   return apiClient.put<OrderResponse, UpdateOrderStatusData>(
-    `/order/${orderId}/status`,
+    `/order/admin/${orderId}/status`,
     data
   );
 };

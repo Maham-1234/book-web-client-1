@@ -1,3 +1,5 @@
+import type { deleteProduct } from "@/api/modules/product";
+
 export interface User {
   id: string; // UUID
   firstName: string;
@@ -82,6 +84,11 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export type Reviewer = Pick<User, "id" | "firstName" | "avatar">;
@@ -104,8 +111,14 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  data?: T[];
+  orders?: T[];
+  users?: T[];
+
   total: number;
+  totalOrders?: number;
+  totalUsers?: number;
+
   totalPages: number;
   currentPage: number;
 }
@@ -189,12 +202,18 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  allUsers: PaginatedResponse<User> | null;
+  isFetchingUsers: boolean;
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
-
+  fetchAllUsers: (page?: number, imit?: number) => Promise<void>;
+  updateUserAsAdmin: (
+    userId: string,
+    data: { isActive?: boolean }
+  ) => Promise<void>;
   clearError: () => void;
 }
 
@@ -221,7 +240,12 @@ export interface ProductContextType {
   fetchAllProducts: (filters?: ProductFilters) => Promise<void>;
   fetchProductById: (id: string) => Promise<void>;
   clearProduct: () => void;
+  updateProduct: (
+    productId: string,
+    data: UpdateProductData
+  ) => Promise<Product>;
   createProduct: (data: CreateProductData) => Promise<Product>;
+  deleteProduct: (productId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -250,6 +274,12 @@ export interface CategoryContextType {
   isLoading: boolean;
   error: string | null;
   fetchCategoryTree: () => Promise<void>;
+  createCategory: (data: CreateCategoryData) => Promise<void>;
+  updateCategory: (
+    categoryId: number,
+    data: UpdateCategoryData
+  ) => Promise<void>;
+  deleteCategory: (categoryId: number) => Promise<void>;
 }
 
 export interface ReviewContextType {
@@ -291,3 +321,5 @@ export interface ProductFormValues {
   brand?: string;
   categoryId: number;
 }
+
+export type UpdateUserData = { isActive?: boolean };

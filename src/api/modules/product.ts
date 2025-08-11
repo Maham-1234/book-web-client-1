@@ -72,7 +72,7 @@ export const uploadProductImages = async (
   }
 
   return apiClient.post<ProductResponse>(
-    `/product/upload/${productId}`,
+    `/product/${productId}/images`,
     formData
   );
 };

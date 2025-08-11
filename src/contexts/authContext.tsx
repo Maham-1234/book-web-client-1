@@ -15,6 +15,7 @@ import type {
   UpdateProfileData,
   AuthContextType,
   ApiErrorResponse,
+  PaginatedResponse,
 } from "../types";
 
 import {
@@ -24,6 +25,8 @@ import {
   checkSession as apiCheckSession,
   updateProfile as apiUpdateProfile,
   uploadAvatar as apiUploadAvatar,
+  fetchAllUsers as apiFetchAllUsers,
+  updateUserAsAdmin as apiUpdateUserAsAdmin,
 } from "../api/modules/auth";
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -40,6 +43,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   const hasCheckedSession = useRef(false);
+
+  const [allUsers, setAllUsers] = useState<PaginatedResponse<User> | null>(
+    null
+  );
+  const [isFetchingUsers, setIsFetchingUsers] = useState(false);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -155,17 +163,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const fetchAllUsers = useCallback(async (page?: number, limit?: number) => {
+    try {
+      setIsFetchingUsers(true);
+      setError(null);
+      const response = await apiFetchAllUsers(page, limit);
+      setAllUsers(response);
+    } catch (err) {
+      const apiError = err as ApiErrorResponse;
+      const errorMessage = apiError.message || "Failed to fetch users.";
+      setError(errorMessage);
+    } finally {
+      setIsFetchingUsers(false);
+    }
+  }, []);
+
+  const updateUserAsAdmin = useCallback(
+    async (userId: string, data: { isActive?: boolean }) => {
+      const { user: updatedUser } = await apiUpdateUserAsAdmin(userId, data);
+      setAllUsers((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          users: prev.users?.map((u) => (u.id === userId ? updatedUser : u)),
+        };
+      });
+    },
+    []
+  );
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
     error,
+    allUsers,
+    isFetchingUsers,
     login,
     register,
     logout,
     updateProfile,
     uploadAvatar,
     clearError,
+    fetchAllUsers,
+    updateUserAsAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

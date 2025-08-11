@@ -131,9 +131,20 @@ export function OrderProvider({ children }: OrderProviderProps) {
 
         setPaginatedOrders((prev) => {
           if (!prev) return null;
+          console.log("prev", prev);
+          const updatedOrders = prev.orders.map((o) => {
+            if (o.id === orderId) {
+              return {
+                ...updatedOrder,
+                user: o.user,
+              };
+            }
+            return o;
+          });
+
           return {
             ...prev,
-            data: prev.orders.map((o) => (o.id === orderId ? updatedOrder : o)),
+            orders: updatedOrders,
           };
         });
 
@@ -156,7 +167,7 @@ export function OrderProvider({ children }: OrderProviderProps) {
   }, []);
   const cancelUserOrder = useCallback(
     async (orderId: string) => {
-      setIsUpdating(true); // Use the existing granular loading state
+      setIsUpdating(true);
       setError(null);
       try {
         const response = await apiCancelOrder(orderId);
