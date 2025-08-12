@@ -89,3 +89,10 @@ export const updateOrderStatus = async (
 export const cancelOrder = async (orderId: string): Promise<OrderResponse> => {
   return apiClient.delete<OrderResponse>(`/order/${orderId}`);
 };
+
+export const createPaymentIntent = async (): Promise<{
+  clientSecret: string;
+}> => {
+  const response = await apiClient.post("/payment/create-payment-intent");
+  return response.clientSecret;
+};

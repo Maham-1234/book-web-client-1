@@ -98,15 +98,16 @@ export default function LandingPage() {
             title="Our Collections"
             subtitle="Everything you need, whether you're diving into a new world or creating your own."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-wrap justify-center items-center gap-8 p-4 md:p-8">
             {/* Links to filtered pages */}
             <Link to="/home?category=Books" className="group">
               <Card className="h-full hover:border-primary transition-all">
                 <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                  <div className="flex flex-col items-center p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                    {" "}
                     <BookOpen className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
+                    <CardTitle className="font-bold">Books</CardTitle>
                   </div>
-                  <CardTitle>Books</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center text-muted-foreground">
                   Explore thousands of titles across all genres.
@@ -116,10 +117,11 @@ export default function LandingPage() {
             <Link to="/home?category=Stationery" className="group">
               <Card className="h-full hover:border-primary transition-all">
                 <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                  <div className="flex flex-col items-center p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                    {" "}
                     <NotebookText className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
+                    <CardTitle className="font-bold">Stationery</CardTitle>
                   </div>
-                  <CardTitle>Stationery</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center text-muted-foreground">
                   Journals, pens, and art supplies for every task.
@@ -163,7 +165,6 @@ export default function LandingPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* 3. USE the new ProductCard and pass the required props */}
                   {featuredBooks.map((book) => (
                     <ProductCard
                       key={book.id}

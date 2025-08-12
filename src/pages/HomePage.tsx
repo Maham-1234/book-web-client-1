@@ -19,7 +19,7 @@ const HomeBanner = () => (
 
 export default function HomePage() {
   const { paginatedData, fetchAllProducts } = useProduct();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const [filters, setFilters] = useState<ProductFilters>({
     search: "",
@@ -74,7 +74,7 @@ export default function HomePage() {
             onSearch={handleSearch}
             onSortChange={handleSortChange}
           />
-          <ProductGrid isAuthenticated={isAuthenticated} />
+          <ProductGrid userRole={user?.role} />
           <PaginationControls
             currentPage={paginatedData?.currentPage || 1}
             totalPages={paginatedData?.totalPages || 1}

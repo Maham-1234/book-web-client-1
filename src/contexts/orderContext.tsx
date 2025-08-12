@@ -88,22 +88,6 @@ export function OrderProvider({ children }: OrderProviderProps) {
     }
   }, []);
 
-  const placeOrder = useCallback(async (data: CreateOrderData) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await apiCreateOrder(data);
-      setOrders((prev) => [response.order, ...prev]);
-      return response.order;
-    } catch (err) {
-      const apiError = err as ApiErrorResponse;
-      setError(apiError.message || "There was a problem placing your order.");
-      throw apiError;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   const fetchAllAdminOrders = useCallback(
     async (page?: number, limit?: number) => {
       setIsLoading(true);
@@ -192,6 +176,23 @@ export function OrderProvider({ children }: OrderProviderProps) {
     },
     [currentOrder]
   );
+
+  const placeOrder = useCallback(async (data: CreateOrderData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await apiCreateOrder(data);
+      setOrders((prev) => [response.order, ...prev]);
+      return response.order;
+    } catch (err) {
+      const apiError = err as ApiErrorResponse;
+      setError(apiError.message || "There was a problem placing your order.");
+      throw apiError;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const value: OrderContextType = {
     orders,
     currentOrder,

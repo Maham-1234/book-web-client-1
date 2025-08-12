@@ -45,6 +45,17 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface InventoryTransaction {
+  id: string;
+  type: "in" | "out";
+  quantity: number;
+  reason: "restock" | "return" | "damage" | "initial";
+  productId: string;
+  orderId?: string | null;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
 export interface CartItem {
   id: string;
   quantity: number;
@@ -118,7 +129,7 @@ export interface PaginatedResponse<T> {
   total: number;
   totalOrders?: number;
   totalUsers?: number;
-
+  totalProducts?: number;
   totalPages: number;
   currentPage: number;
 }
@@ -181,10 +192,6 @@ export interface AddItemToCartData {
 
 export interface UpdateCartItemData {
   quantity: number;
-}
-
-export interface CreateOrderData {
-  shippingAddress: ShippingAddress;
 }
 
 export interface CreateReviewData {
@@ -323,3 +330,24 @@ export interface ProductFormValues {
 }
 
 export type UpdateUserData = { isActive?: boolean };
+
+export interface CreateOrderData {
+  shippingAddress: ShippingAddress;
+  paymentIntentId: string;
+}
+export type CreateManualTransactionData = {
+  productId: string;
+  type: "in" | "out";
+  quantity: number;
+  reason: "restock" | "return" | "damage" | "initial";
+};
+export type InventoryContextType = {
+  transactions: InventoryTransaction[];
+  isLoading: boolean;
+  error: string | null;
+  clearError: () => void;
+  getProductTransactions: (productId: string) => Promise<void>;
+  addManualTransaction: (
+    data: CreateManualTransactionData
+  ) => Promise<InventoryTransaction | undefined>;
+};

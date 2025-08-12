@@ -2,7 +2,6 @@ import { type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Order } from "@/types";
 
-// UI Components
 import {
   Card,
   CardContent,
@@ -39,7 +38,7 @@ export const OrderHistoryCard: FC<OrderHistoryCardProps> = ({ order }) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow pt-6 pb-0">
       <CardHeader className="flex-row items-center justify-between">
         <div>
           <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
@@ -52,7 +51,7 @@ export const OrderHistoryCard: FC<OrderHistoryCardProps> = ({ order }) => {
         </Badge>
       </CardHeader>
       <Separator />
-      <CardContent className="pt-6">
+      <CardContent className="pt-4">
         <div className="flex space-x-4">
           {order.items.slice(0, 4).map((item) => (
             <img
@@ -72,13 +71,14 @@ export const OrderHistoryCard: FC<OrderHistoryCardProps> = ({ order }) => {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center bg-muted/50 p-4">
+      <CardFooter className="flex justify-between items-center bg-muted/50 p-4 rounded-b-xl">
         <div>
           <span className="text-muted-foreground">Total: </span>
           <span className="font-bold text-lg">${order.totalAmount}</span>
         </div>
         <Button
           variant="outline"
+          className="dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-primary-foreground dark:focus:ring"
           onClick={() => navigate(`/order/${order.id}`)}
         >
           View Details

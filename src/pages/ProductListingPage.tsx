@@ -1,6 +1,6 @@
 import { useState, useEffect, type FC } from "react";
 import { useProduct } from "@/contexts/productContext";
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/authContext"; // Keep this import
 import type { ProductFilters } from "@/types";
 
 import { ProductSidebar } from "@/components/PageComponents/product/ProductSidebar";
@@ -20,7 +20,7 @@ const ProductListingPage: FC<ProductListingPageProps> = ({
   categoryFilterId,
 }) => {
   const { paginatedData, fetchAllProducts } = useProduct();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const [filters, setFilters] = useState<ProductFilters>({
     search: "",
@@ -37,11 +37,9 @@ const ProductListingPage: FC<ProductListingPageProps> = ({
 
   useEffect(() => {
     if (filters.categoryId === undefined) return;
-
     const handler = setTimeout(() => {
       fetchAllProducts(filters);
     }, 300);
-
     return () => clearTimeout(handler);
   }, [filters, fetchAllProducts]);
 
@@ -78,7 +76,7 @@ const ProductListingPage: FC<ProductListingPageProps> = ({
             onSearch={handleSearch}
             onSortChange={handleSortChange}
           />
-          <ProductGrid isAuthenticated={isAuthenticated} />
+          <ProductGrid userRole={user?.role} />
           <PaginationControls
             currentPage={paginatedData?.currentPage || 1}
             totalPages={paginatedData?.totalPages || 1}

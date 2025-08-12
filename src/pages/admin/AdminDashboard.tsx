@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { useProduct } from "@/contexts/productContext";
 import { useOrder } from "@/contexts/orderContext";
 import { useAuth } from "@/contexts/authContext";
-
+import { useCategory } from "@/contexts/categoryContext";
+import { flattenCategories } from "@/lib/flattenCategories";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,12 +22,14 @@ import {
   ShoppingCart,
   Users,
   DollarSign,
+  ClipboardList,
 } from "lucide-react";
 
 import { StatsCard } from "@/components/PageComponents/StatsCard";
 import AdminProductDataTable from "@/components/PageComponents/admin/AdminProductDataTable";
 import AdminOrderDataTable from "@/components/PageComponents/admin/AdminOrderDataTable";
 import AdminUserDataTable from "@/components/PageComponents/admin/AdminUserDataTable";
+import AdminCategoryDataTable from "@/components/PageComponents/admin/AdminCategoryTable";
 
 export default function AdminDashboardPage() {
   const {
@@ -44,11 +47,19 @@ export default function AdminDashboardPage() {
   const { allUsers, isFetchingUsers, fetchAllUsers, updateUserAsAdmin } =
     useAuth();
 
+  // Use the category context
+  const {
+    categoryTree,
+    isLoading: categoriesLoading,
+    fetchCategoryTree,
+  } = useCategory();
+
   useEffect(() => {
     fetchAllProducts();
     fetchAllAdminOrders();
     fetchAllUsers();
-  }, [fetchAllProducts, fetchAllAdminOrders, fetchAllUsers]);
+    fetchCategoryTree();
+  }, [fetchAllProducts, fetchAllAdminOrders, fetchAllUsers, fetchCategoryTree]);
 
   const totalRevenue = useMemo(() => {
     return (paginatedOrders?.orders || []).reduce((acc, order) => {
@@ -57,6 +68,10 @@ export default function AdminDashboardPage() {
         : acc;
     }, 0);
   }, [paginatedOrders]);
+  const totalCategoriesCount = useMemo(
+    () => flattenCategories(categoryTree || []).length,
+    [categoryTree]
+  );
 
   return (
     <div className="min-h-screen">
@@ -88,8 +103,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Cards Grid - Now uses correct data from contexts */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {/* Stats Cards Grid - Now includes categories */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <StatsCard
             Icon={DollarSign}
             value={`$${totalRevenue.toFixed(2)}`}
@@ -102,8 +117,7 @@ export default function AdminDashboardPage() {
           />
           <StatsCard
             Icon={BookOpen}
-            // Assuming your product pagination also has a 'total' property
-            value={String(productPagination?.total ?? 0)}
+            value={String(productPagination?.totalProducts ?? 0)}
             label="Total Products"
           />
           <StatsCard
@@ -111,17 +125,24 @@ export default function AdminDashboardPage() {
             value={String(allUsers?.totalUsers ?? 0)}
             label="Total Users"
           />
+          <StatsCard
+            Icon={ClipboardList}
+            value={String(totalCategoriesCount)} // Use the accurate count
+            label="Total Categories"
+          />
         </div>
 
-        {/* Main Content Tabs */}
+        {/* Main Content Tabs - Now includes a tab for categories */}
         <Tabs defaultValue="products" className="space-y-4">
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            {/* New tab for categories */}
           </TabsList>
 
-          {/* Manage Products Tab - Uses its own loading state */}
+          {/* Manage Products Tab */}
           <TabsContent value="products">
             <Card>
               <CardHeader>
@@ -144,7 +165,7 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Orders Tab - Uses its own loading state */}
+          {/* Manage Orders Tab */}
           <TabsContent value="orders">
             <Card>
               <CardHeader>
@@ -165,7 +186,7 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Users Tab - Uses the new user-specific loading state */}
+          {/* Manage Users Tab */}
           <TabsContent value="users">
             <Card>
               <CardHeader>
@@ -175,12 +196,33 @@ export default function AdminDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* AdminUserDataTable now receives the correct data and loading state */}
                 <AdminUserDataTable
                   users={allUsers?.users || []}
                   isLoading={isFetchingUsers}
                   updateUserAsAdmin={updateUserAsAdmin}
                 />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Manage Categories Tab - New tab content */}
+          <TabsContent value="categories">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manage Categories</CardTitle>
+                <CardDescription>
+                  Organize your products by creating, editing, or deleting
+                  categories.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {categoriesLoading ? (
+                  <div className="flex justify-center items-center h-60">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <AdminCategoryDataTable categories={categoryTree || []} />
+                )}
               </CardContent>
             </Card>
           </TabsContent>

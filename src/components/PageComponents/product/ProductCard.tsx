@@ -10,35 +10,33 @@ import { useCart } from "@/contexts/cartContext";
 
 type ProductCardProps = {
   product: Product;
-  isAuthenticated: boolean;
+  userRole?: "admin" | "buyer";
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  isAuthenticated,
+  userRole,
 }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated) {
+    if (!userRole) {
+      toast.error("Please log in to add items to your cart.");
       navigate("/login");
       return;
     }
 
     setIsAdding(true);
-
     try {
       await addToCart(product.id, 1);
       toast.success(`${product.name} added to cart!`);
     } catch (error: any) {
       toast.error(error.message || "Could not add item to cart.");
-      console.error("Failed to add to cart:", error);
     } finally {
       setIsAdding(false);
     }
@@ -46,7 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card
-      className="overflow-hidden group cursor-pointer"
+      className="overflow-hidden group cursor-pointe pb-0 pt-0"
       onClick={() => navigate(`/product/${product.id}`)}
     >
       <div className="relative">
@@ -68,17 +66,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </p>
         <div className="flex justify-between items-center mt-4">
           <p className="font-semibold text-lg">${product.price}</p>
-          <Button
-            size="icon"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0 || isAdding}
-          >
-            {isAdding ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ShoppingCart className="h-4 w-4" />
-            )}{" "}
-          </Button>
+
+          {userRole !== "admin" && (
+            <Button
+              size="icon"
+              onClick={handleAddToCart}
+              disabled={product.stock === 0 || isAdding}
+            >
+              {isAdding ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

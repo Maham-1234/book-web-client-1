@@ -21,6 +21,8 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboard";
 import AddProductPage from "@/pages/admin/AddProductPage";
 import ManageProductPage from "@/pages/admin/ManageProductPage";
 import AddCategoryPage from "@/pages/admin/AddCategoryPage";
+import AuthCallbackPage from "@/pages/auth/AuthCallbackPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 const AppRoutes = () => {
   return (
@@ -32,6 +34,7 @@ const AppRoutes = () => {
       <Route path="/product/:id" element={<ProductPage />} />
       <Route path="/books" element={<BooksPage />} />
       <Route path="/stationary" element={<StationaryPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
       <Route
         path="/profile"
@@ -41,46 +44,48 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/cart"
-        element={
-          <ProtectedRoute>
-            <ViewCartPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/checkout"
-        element={
-          <ProtectedRoute>
-            <CheckoutPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/order/success/:orderId"
-        element={
-          <ProtectedRoute>
-            <OrderSuccessPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/myOrders"
-        element={
-          <ProtectedRoute>
-            <MyOrdersPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/order/:orderId"
-        element={
-          <ProtectedRoute>
-            <ViewOrderDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<RoleGuard allowedRoles={["buyer"]} />}>
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <ViewCartPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order/success/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/myOrders"
+          element={
+            <ProtectedRoute>
+              <MyOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order/:orderId"
+          element={
+            <ProtectedRoute>
+              <ViewOrderDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
       <Route element={<RoleGuard allowedRoles={["admin"]} />}>
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
@@ -89,7 +94,7 @@ const AppRoutes = () => {
         <Route path="/admin/category/create" element={<AddCategoryPage />} />
       </Route>
 
-      <Route path="*" element={<div>404 - Page Not Found</div>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

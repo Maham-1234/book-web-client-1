@@ -61,7 +61,11 @@ export default function AdminOrderDataTable({
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-primary-foreground dark:focus:ring"
+                  >
                     Update Status
                   </Button>
                 </DropdownMenuTrigger>

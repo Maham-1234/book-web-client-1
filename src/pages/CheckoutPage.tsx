@@ -1,191 +1,159 @@
-import type { FC } from "react";
+import { type FC, useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 
+import { Elements, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import type { StripeElementsOptions } from "@stripe/stripe-js";
+
+import { useAuth } from "@/contexts/authContext";
 import { useCart } from "@/contexts/cartContext";
 import { useOrder } from "@/contexts/orderContext";
-import { useAuth } from "@/contexts/authContext";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { createPaymentIntent } from "@/api/modules/order";
+import CheckoutForm from "@/components/PageComponents/order/CheckoutForm";
 import { Loader2 } from "lucide-react";
-
 import type { ShippingAddress } from "@/types";
 
-type CheckoutFormValues = ShippingAddress;
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-const CheckoutPage: FC = () => {
+interface CheckoutPageContentProps {
+  clientSecret: string;
+}
+
+const CheckoutPageContent: FC<CheckoutPageContentProps> = ({
+  clientSecret,
+}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cart, itemCount, cartTotal, isLoading: isCartLoading } = useCart();
-  const { placeOrder, isLoading: isPlacingOrder } = useOrder();
+  const { cartTotal, emptyCart } = useCart();
+  const { placeOrder } = useOrder();
+  const stripe = useStripe();
+  const elements = useElements();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<CheckoutFormValues>();
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const onSubmit: SubmitHandler<CheckoutFormValues> = async (
-    shippingAddress
-  ) => {
-    // Create a toast promise for the checkout process
-    const checkoutPromise = placeOrder({ shippingAddress });
+  const handleFormSubmit = async (shippingAddress: ShippingAddress) => {
+    if (!stripe || !elements) {
+      setPaymentError("Payment services are not yet available.");
+      return;
+    }
 
-    toast.promise(checkoutPromise, {
-      loading: "Placing your order...",
-      success: (newOrder) => {
-        navigate(`/order/success/${newOrder.id}`); // Redirect on success
+    const cardElement = elements.getElement("card");
+    if (!cardElement) {
+      setPaymentError("Card details could not be found.");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    const paymentFlowPromise = new Promise(async (resolve, reject) => {
+      try {
+        const { error: stripeError, paymentIntent } =
+          await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+              card: cardElement,
+              billing_details: {
+                name: `${user?.firstName} ${user?.lastName}`,
+                email: user?.email,
+              },
+            },
+          });
+
+        if (stripeError) return reject(new Error(stripeError.message));
+        if (paymentIntent?.status !== "succeeded") {
+          return reject(new Error("Payment was not successful."));
+        }
+
+        const newOrder = await placeOrder({
+          shippingAddress,
+          paymentIntentId: paymentIntent.id,
+        });
+        console.log("newOrder: ", newOrder);
+
+        emptyCart();
+        resolve(newOrder);
+      } catch (err: any) {
+        reject(err);
+      }
+    });
+
+    toast.promise(paymentFlowPromise, {
+      loading: "Processing payment and creating order...",
+      success: (newOrder: any) => {
+        navigate(`/order/success/${newOrder.id}`);
         return "Order placed successfully!";
       },
-      error: (err) => err.message || "Checkout failed. Please try again.",
+      error: (err) => {
+        setIsProcessingPayment(false);
+        return err.message || "Checkout failed. Please try again.";
+      },
     });
   };
 
-  // If the cart is loading or the cart is empty, redirect back to the home or cart page
-  if (!isCartLoading && (!cart || itemCount === 0)) {
+  return (
+    <CheckoutForm
+      user={user}
+      cartTotal={cartTotal || 0}
+      isProcessingPayment={isProcessingPayment}
+      paymentError={paymentError}
+      stripeIsReady={!!stripe}
+      onFormSubmit={handleFormSubmit}
+    />
+  );
+};
+
+const CheckoutPage: FC = () => {
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { itemCount, isLoading: isCartLoading } = useCart();
+
+  useEffect(() => {
+    if (itemCount != null && itemCount > 0) {
+      createPaymentIntent()
+        .then((data) => setClientSecret(data))
+        .catch(() =>
+          setError(
+            "Could not initialize payment. Please refresh and try again."
+          )
+        );
+    }
+  }, [itemCount]);
+
+  if (!isCartLoading && itemCount === 0) {
     return <Navigate to="/cart" replace />;
   }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-destructive text-xl">{error}</p>
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="mr-4 h-8 w-8 animate-spin" />
+        <span className="text-xl">Initializing secure checkout...</span>
+      </div>
+    );
+  }
+
+  const options: StripeElementsOptions = {
+    clientSecret,
+    appearance: { theme: "stripe" },
+  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Shipping Information Form */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipping Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                id="checkout-form"
-                onSubmit={handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                {/* We can pre-fill the name from the user's profile */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>First Name</Label>
-                    <Input disabled defaultValue={user?.firstName} />
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    <Input disabled defaultValue={user?.lastName} />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="street">Street Address</Label>
-                  <Input
-                    id="street"
-                    {...register("street", {
-                      required: "Street address is required",
-                    })}
-                  />
-                  {errors.street && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.street.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      {...register("city", { required: "City is required" })}
-                    />
-                    {errors.city && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.city.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State / Province</Label>
-                    <Input
-                      id="state"
-                      {...register("state", { required: "State is required" })}
-                    />
-                    {errors.state && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.state.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">ZIP / Postal Code</Label>
-                    <Input
-                      id="zipCode"
-                      {...register("zipCode", {
-                        required: "ZIP Code is required",
-                      })}
-                    />
-                    {errors.zipCode && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.zipCode.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    {...register("country", {
-                      required: "Country is required",
-                    })}
-                  />
-                  {errors.country && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.country.message}
-                    </p>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>${cartTotal?.toFixed(2)}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Shipping and taxes calculated at next step.
-              </p>
-            </CardContent>
-            {/* The button is outside the form, but triggers it via the form ID */}
-            <Button
-              form="checkout-form"
-              type="submit"
-              className="w-full rounded-t-none"
-              size="lg"
-              disabled={isPlacingOrder}
-            >
-              {isPlacingOrder && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Place Order
-            </Button>
-          </Card>
-        </div>
-      </div>
+      <Elements options={options} stripe={stripePromise}>
+        <CheckoutPageContent clientSecret={clientSecret} />
+      </Elements>
     </div>
   );
 };
-
 export default CheckoutPage;

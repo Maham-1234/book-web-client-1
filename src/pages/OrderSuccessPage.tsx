@@ -2,14 +2,12 @@ import { type FC, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useOrder } from "@/contexts/orderContext";
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Icons
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 const OrderSuccessPage: FC = () => {
@@ -26,13 +24,12 @@ const OrderSuccessPage: FC = () => {
     if (orderId) {
       fetchOrderDetails(orderId);
     }
-    // Cleanup function to clear the order from state when the user navigates away
     return () => {
       clearCurrentOrder();
     };
   }, [orderId, fetchOrderDetails, clearCurrentOrder]);
 
-  // --- Loading State ---
+  console.log(orderId);
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 animate-pulse">

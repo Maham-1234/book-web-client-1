@@ -9,16 +9,16 @@ export const WelcomePanel = () => {
           <Calendar className="w-8 h-8" />
         </div>
         <h1 className="text-4xl font-bold mb-4 text-center">
-          Welcome Back to EventFlow
+          Welcome Back to Book Web
         </h1>
         <p className="text-xl text-center opacity-90 max-w-md">
-          Continue your journey of discovering amazing events and creating
-          unforgettable memories.
+          Discover your next favorite read and find all the supplies you need to
+          spark creativity and stay organized. Happy shopping!
         </p>
       </div>
       <img
-        src="./vite.svg?height=800&width=600"
-        alt="Event venue"
+        src="./bookstore-1.jpg?height=800&width=600"
+        alt="Book Store"
         className="absolute inset-0 object-cover opacity-20 w-full h-full"
       />
     </aside>
