@@ -1,5 +1,3 @@
-import type { deleteProduct } from "@/api/modules/product";
-
 export interface User {
   id: string; // UUID
   firstName: string;
@@ -350,4 +348,26 @@ export type InventoryContextType = {
   addManualTransaction: (
     data: CreateManualTransactionData
   ) => Promise<InventoryTransaction | undefined>;
+};
+
+export type SalesData = {
+  date: string;
+
+  totalSales: string;
+};
+
+export type TopProductData = {
+  productId: string;
+  totalQuantitySold: string;
+  product: {
+    name: string;
+  };
+};
+export type DashboardContextType = {
+  salesData: SalesData[];
+  topProducts: TopProductData[];
+  isLoading: boolean;
+  error: string | null;
+  fetchDashboardData: () => Promise<void>;
+  clearError: () => void;
 };
