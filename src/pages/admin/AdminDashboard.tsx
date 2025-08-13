@@ -1,11 +1,18 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useProduct } from "@/contexts/productContext";
 import { useOrder } from "@/contexts/orderContext";
 import { useAuth } from "@/contexts/authContext";
 import { useCategory } from "@/contexts/categoryContext";
+
 import { flattenCategories } from "@/lib/flattenCategories";
+import {
+  fetchSalesOverTime,
+  fetchTopSellingProducts,
+} from "@/api/modules/dashboard";
+import type { SalesData, TopProductData } from "@/types";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +30,7 @@ import {
   Users,
   DollarSign,
   ClipboardList,
+  BarChart2,
 } from "lucide-react";
 
 import { StatsCard } from "@/components/PageComponents/StatsCard";
@@ -30,6 +38,8 @@ import AdminProductDataTable from "@/components/PageComponents/admin/AdminProduc
 import AdminOrderDataTable from "@/components/PageComponents/admin/AdminOrderDataTable";
 import AdminUserDataTable from "@/components/PageComponents/admin/AdminUserDataTable";
 import AdminCategoryDataTable from "@/components/PageComponents/admin/AdminCategoryTable";
+import { SalesOverTimeChart } from "@/components/PageComponents/admin/SalesOverTimeChart";
+import { TopProductsChart } from "@/components/PageComponents/admin/TopProductsChart";
 
 export default function AdminDashboardPage() {
   const {
@@ -37,37 +47,57 @@ export default function AdminDashboardPage() {
     isLoading: productsLoading,
     fetchAllProducts,
   } = useProduct();
-
   const {
     paginatedOrders,
     isLoading: ordersLoading,
     fetchAllAdminOrders,
   } = useOrder();
-
   const { allUsers, isFetchingUsers, fetchAllUsers, updateUserAsAdmin } =
     useAuth();
-
-  // Use the category context
   const {
     categoryTree,
     isLoading: categoriesLoading,
     fetchCategoryTree,
   } = useCategory();
 
+  const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProductData[]>([]);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+
   useEffect(() => {
     fetchAllProducts();
     fetchAllAdminOrders();
     fetchAllUsers();
     fetchCategoryTree();
+
+    const fetchAnalytics = async () => {
+      setIsAnalyticsLoading(true);
+      try {
+        const [sales, top] = await Promise.all([
+          fetchSalesOverTime(),
+          fetchTopSellingProducts(),
+        ]);
+        setSalesData(sales.sales);
+        setTopProducts(top.topProducts);
+      } catch (error) {
+        console.error("Failed to fetch analytics data:", error);
+      } finally {
+        setIsAnalyticsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
   }, [fetchAllProducts, fetchAllAdminOrders, fetchAllUsers, fetchCategoryTree]);
 
-  const totalRevenue = useMemo(() => {
-    return (paginatedOrders?.orders || []).reduce((acc, order) => {
-      return order.status === "delivered"
-        ? acc + Number(order.totalAmount)
-        : acc;
-    }, 0);
-  }, [paginatedOrders]);
+  const totalRevenue = useMemo(
+    () =>
+      (paginatedOrders?.orders || []).reduce(
+        (acc, order) =>
+          order.status === "delivered" ? acc + Number(order.totalAmount) : acc,
+        0
+      ),
+    [paginatedOrders]
+  );
   const totalCategoriesCount = useMemo(
     () => flattenCategories(categoryTree || []).length,
     [categoryTree]
@@ -76,7 +106,6 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
@@ -86,7 +115,6 @@ export default function AdminDashboardPage() {
               Oversee and manage your books and stationery store.
             </p>
           </div>
-
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Button asChild className="rounded-lg">
               <Link to="/admin/product/create" className="flex items-center">
@@ -103,7 +131,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Cards Grid - Now includes categories */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <StatsCard
             Icon={DollarSign}
@@ -127,22 +154,36 @@ export default function AdminDashboardPage() {
           />
           <StatsCard
             Icon={ClipboardList}
-            value={String(totalCategoriesCount)} // Use the accurate count
+            value={String(totalCategoriesCount)}
             label="Total Categories"
           />
         </div>
 
-        {/* Main Content Tabs - Now includes a tab for categories */}
-        <Tabs defaultValue="products" className="space-y-4">
+        <Tabs defaultValue="analytics" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="analytics">
+              <BarChart2 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
-            {/* New tab for categories */}
           </TabsList>
 
-          {/* Manage Products Tab */}
+          <TabsContent value="analytics">
+            {isAnalyticsLoading ? (
+              <div className="flex justify-center items-center h-96">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <SalesOverTimeChart data={salesData} />
+                <TopProductsChart data={topProducts} />
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="products">
             <Card>
               <CardHeader>
@@ -165,7 +206,7 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Orders Tab */}
+          {/* Orders Tab Content */}
           <TabsContent value="orders">
             <Card>
               <CardHeader>
@@ -186,7 +227,6 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Users Tab */}
           <TabsContent value="users">
             <Card>
               <CardHeader>
@@ -205,7 +245,6 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Categories Tab - New tab content */}
           <TabsContent value="categories">
             <Card>
               <CardHeader>
