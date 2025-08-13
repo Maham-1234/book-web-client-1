@@ -122,12 +122,12 @@ You must create `.env` files in both the `book-web-server` and `book-web-client`
 ### Backend (`book-web-server/.env`)
 ````
 
-# Server Configuration
+### Server Configuration
 
 PORT=3000
 NODE_ENV=development
 
-# Database Configuration (PostgreSQL)
+### Database Configuration (PostgreSQL)
 
 DB_HOST=localhost
 DB_PORT=5432
@@ -135,64 +135,59 @@ DB_NAME=book_web_db
 DB_USER=postgres
 DB_PASSWORD=your_db_password
 
-# JWT Authentication
+### JWT Authentication
 
 JWT_SECRET=your_super_secret_jwt_key
 JWT_EXPIRES_IN=1d
 JWT_REFRESH_SECRET=another_super_secret_key
 JWT_REFRESH_EXPIRES_IN=7d
 
-# File Upload Path
+### File Upload Path
 
 UPLOAD_PATH=uploads
 
-# CORS Origin (The URL of your frontend app)
+### CORS Origin (The URL of your frontend app)
 
 CORS_ORIGIN=http://localhost:5173
 
-# Email Service (for password resets, etc.)
+### Email Service (for password resets, etc.)
 
 EMAIL_SERVICE_HOST=smtp.gmail.com
 EMAIL_SERVICE_PORT=587
 EMAIL_SERVICE_USER=your-email@gmail.com
 EMAIL_SERVICE_PASS=your-google-app-password
 
-# Google OAuth
+### Google OAuth
 
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# Express Session
+### Express Session
 
 SESSION_SECRET=my-super-secret-session-secret
 
-# Redis (Optional, for session storage or caching)
+### Redis (Optional, for session storage or caching)
 
 REDIS_URL=redis://localhost:6379
 
-# Stripe API Keys
+### Stripe API Keys
 
-STRIPE*SECRET_KEY=sk_test*...
-STRIPE*WEBHOOK_SECRET=whsec*...
+STRIPE_SECRET_KEY=sk_test*...
+STRIPE_WEBHOOK_SECRET=whsec*...
 
-# Frontend URL (for redirects)
+### Frontend URL (for redirects)
 
 FRONTEND_URL=http://localhost:5173
 
-```
+## Frontend (`book-web-client/.env`)
 
-### Frontend (`book-web-client/.env`)
-```
-
-# The URL where your backend server is running
+### The URL where your backend server is running
 
 VITE_API_BASE_URL=http://localhost:3000
 
-# Your Stripe Publishable Key (this is safe to expose)
+### Your Stripe Publishable Key (this is safe to expose)
 
 VITE*STRIPE_PUBLISHABLE_KEY=pk_test*...
-
-```
 
 ---
 
@@ -201,6 +196,7 @@ VITE*STRIPE_PUBLISHABLE_KEY=pk_test*...
 Each repository has its own clear and logical structure.
 
 ### Backend (`book-web`)
+
 ```
 
 /
@@ -216,6 +212,7 @@ Each repository has its own clear and logical structure.
 ```
 
 ### Frontend (`book-web-client-1`)
+
 ```
 
 /
@@ -250,4 +247,7 @@ Contributions are what make the open-source community such an amazing place to l
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+```
+
 ```
