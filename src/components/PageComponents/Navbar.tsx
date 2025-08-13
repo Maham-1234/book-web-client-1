@@ -30,6 +30,8 @@ import {
   LayoutDashboard,
   Moon,
   Sun,
+  ListOrderedIcon,
+  Package, // A good icon for "All Products"
 } from "lucide-react";
 
 const ThemeToggleButton = () => {
@@ -57,10 +59,11 @@ export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const isAdmin = user?.role === "admin";
 
+  // Fixed the avatarUrl logic to correctly use the variable
   const VITE_API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
   const avatarUrl = user?.avatar
-    ? `${VITE_API_BASE_URL}/uploads/avatars/${user.avatar}`
+    ? `${VITE_API_BASE_URL}/${user.avatar}`
     : undefined;
 
   const handleLogout = async () => {
@@ -75,7 +78,7 @@ export default function Navbar() {
   const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
       <Link
-        to="/books" // Changed from /events
+        to="/books"
         className={
           isMobile
             ? "text-lg"
@@ -86,7 +89,7 @@ export default function Navbar() {
         Books
       </Link>
       <Link
-        to="/stationery" // Added new link
+        to="/stationary"
         className={
           isMobile
             ? "text-lg"
@@ -96,6 +99,20 @@ export default function Navbar() {
       >
         Stationery
       </Link>
+      {/* --- CHANGE 1: "All Products" link for Admins --- */}
+      {isAdmin && (
+        <Link
+          to="/home" // This now points to the homepage
+          className={
+            isMobile
+              ? "text-lg"
+              : "text-sm font-medium hover:text-primary transition-colors"
+          }
+          onClick={() => isMobile && setIsMobileMenuOpen(false)}
+        >
+          All Products
+        </Link>
+      )}
       {isAdmin && (
         <Link
           to="/admin/dashboard"
@@ -106,25 +123,21 @@ export default function Navbar() {
           }
           onClick={() => isMobile && setIsMobileMenuOpen(false)}
         >
-          Admin
+          Dashboard
         </Link>
       )}
     </>
   );
 
-  let destination = "/";
-  if (isAuthenticated && user?.role === "admin") {
-    destination = "/admin/dashboard";
-  } else if (isAuthenticated) {
-    destination = "/"; // Default for logged-in users
-  }
+  // Set the default destination for the logo click based on user role
+  const logoDestination = isAdmin ? "/admin/dashboard" : "/";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to={destination} className="flex items-center space-x-2">
+          <Link to={logoDestination} className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -140,6 +153,17 @@ export default function Navbar() {
           <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggleButton />
 
+            {/* --- CHANGE 2: Cart button moved here, outside the dropdown --- */}
+            {/* It will only render if the user is NOT an admin */}
+            {!isAdmin && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="sr-only">My Cart</span>
+                </Link>
+              </Button>
+            )}
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -149,7 +173,7 @@ export default function Navbar() {
                   >
                     <Avatar className="h-9 w-9">
                       <AvatarImage
-                        src={avatarUrl}
+                        src={`http://localhost:3000/uploads/avatars/${user?.avatar}`}
                         alt={user?.firstName || "User Avatar"}
                       />
                       <AvatarFallback>
@@ -177,10 +201,13 @@ export default function Navbar() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
+
+                  {/* --- CHANGE 3: "My Cart" option is now REMOVED from the dropdown --- */}
+
                   {!isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/user/orders">
-                        <ShoppingCart className="mr-2 h-4 w-4" />
+                      <Link to="/myOrders">
+                        <ListOrderedIcon className="mr-2 h-4 w-4" />
                         <span>My Orders</span>
                       </Link>
                     </DropdownMenuItem>
@@ -190,6 +217,14 @@ export default function Navbar() {
                       <Link to="/admin/dashboard">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Admin Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/home">
+                        <Package className="mr-2 h-4 w-4" />
+                        <span>View Products</span>
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -204,7 +239,7 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              // --- Login/Sign Up Buttons (Desktop) ---
+              // Login/Sign Up Buttons (Desktop)
               <div className="hidden md:flex items-center space-x-2">
                 <Button variant="ghost" asChild>
                   <Link to="/login">Login</Link>
@@ -215,7 +250,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* --- Mobile Menu --- */}
+            {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -229,7 +264,6 @@ export default function Navbar() {
                   className="w-[300px] p-4 sm:w-[400px]"
                 >
                   <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
-
                   <div className="flex flex-col space-y-6 mt-8">
                     <NavLinks isMobile />
                     {!isAuthenticated && (

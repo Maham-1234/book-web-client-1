@@ -5,17 +5,15 @@ import { useProduct } from "@/contexts/productContext";
 
 import type { Product } from "../types";
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Page Components
 import { SectionHeader } from "@/components/PageComponents/SectionHeader";
 import { StatsCard } from "../components/PageComponents/StatsCard";
+import { ProductCard } from "../components/PageComponents/product/ProductCard";
 
-// Icons
 import {
   BookOpen,
   Users,
@@ -23,76 +21,39 @@ import {
   ArrowRight,
   WandSparkles,
   NotebookText,
-  PenTool,
-  Palette,
-  AlertTriangle, // Icon for error messages
+  AlertTriangle,
 } from "lucide-react";
-
-// Reusable Product Card Component
-const ProductCard = ({ product }: { product: Product }) => (
-  // Link now uses the product's ID, which the controller expects
-  <Link to={`/products/${product.id}`} className="group">
-    <Card className="h-full overflow-hidden transition-all duration-300 group-hover:border-primary group-hover:shadow-xl">
-      <CardContent className="p-0">
-        <div className="w-full h-64 bg-secondary">
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            // Fallback for missing images
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <BookOpen className="w-10 h-10" />
-            </div>
-          )}
-        </div>
-        <div className="p-4">
-          <h4 className="font-bold truncate" title={product.name}>
-            {product.name}
-          </h4>
-          <p className="text-sm text-muted-foreground">
-            {product.type === "book"
-              ? product.details?.author || "Unknown Author"
-              : product.details?.brand || "Premium Brand"}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  </Link>
-);
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const { products, isLoading, error, fetchAllProducts } = useProduct();
+  const { paginatedData, isLoading, error, fetchAllProducts } = useProduct();
 
   const [featuredBooks, setFeaturedBooks] = useState<Product[]>([]);
   const [featuredStationery, setFeaturedStationery] = useState<Product[]>([]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/user/home");
+      navigate("/home");
     } else {
-      // Fetch the 6 newest items, which is compatible with the controller's default sorting.
       fetchAllProducts({ limit: 6, sortBy: "createdAt", sortOrder: "DESC" });
     }
   }, [isAuthenticated, navigate, fetchAllProducts]);
-
   useEffect(() => {
+    const products = paginatedData?.products;
+    console.log("products: ", products);
     if (products && products.length > 0) {
       const books = products
-        .filter((p) => p.productType === "Books")
+        .filter((p) => p.category?.parentId === 1)
         .slice(0, 2);
       const stationery = products
-        .filter((p) => p.productType === "Stationary")
+        .filter((p) => p.category?.parentId === 2)
         .slice(0, 4);
       setFeaturedBooks(books);
       setFeaturedStationery(stationery);
     }
-  }, [products]);
+  }, [paginatedData]);
 
   return (
     <>
@@ -117,21 +78,13 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
+                asChild
                 size="lg"
                 className="px-8 py-6 text-lg rounded-xl"
-                asChild
               >
-                <Link to="/books">
-                  Explore Books <ArrowRight className="ml-2 w-5 h-5" />
+                <Link to="/home">
+                  Explore Products <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-8 py-6 text-lg rounded-xl"
-                asChild
-              >
-                <Link to="/stationery">Explore Stationery</Link>
               </Button>
             </div>
           </div>
@@ -145,56 +98,33 @@ export default function LandingPage() {
             title="Our Collections"
             subtitle="Everything you need, whether you're diving into a new world or creating your own."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Link to="/books" className="group">
+          <div className="flex flex-wrap justify-center items-center gap-8 p-4 md:p-8">
+            {/* Links to filtered pages */}
+            <Link to="/home?category=Books" className="group">
               <Card className="h-full hover:border-primary transition-all">
                 <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                  <div className="flex flex-col items-center p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                    {" "}
                     <BookOpen className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
+                    <CardTitle className="font-bold">Books</CardTitle>
                   </div>
-                  <CardTitle>Books</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center text-muted-foreground">
                   Explore thousands of titles across all genres.
                 </CardContent>
               </Card>
             </Link>
-            <Link to="/stationery/journals" className="group">
+            <Link to="/home?category=Stationery" className="group">
               <Card className="h-full hover:border-primary transition-all">
                 <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                  <div className="flex flex-col items-center p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
+                    {" "}
                     <NotebookText className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
+                    <CardTitle className="font-bold">Stationery</CardTitle>
                   </div>
-                  <CardTitle>Journals</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center text-muted-foreground">
-                  Perfect for notes, plans, and daily reflections.
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/stationery/pens" className="group">
-              <Card className="h-full hover:border-primary transition-all">
-                <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
-                    <PenTool className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
-                  </div>
-                  <CardTitle>Pens & Pencils</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center text-muted-foreground">
-                  Find the perfect writing tool for every task.
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/stationery/art-supplies" className="group">
-              <Card className="h-full hover:border-primary transition-all">
-                <CardHeader className="items-center text-center">
-                  <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:bg-primary transition-all">
-                    <Palette className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-all" />
-                  </div>
-                  <CardTitle>Art Supplies</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center text-muted-foreground">
-                  Unleash your inner artist with paints and brushes.
+                  Journals, pens, and art supplies for every task.
                 </CardContent>
               </Card>
             </Link>
@@ -234,31 +164,21 @@ export default function LandingPage() {
                   No new items to show right now. Check back soon!
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  {featuredBooks.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-bold mb-6 text-center lg:text-left">
-                        Latest Reads
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {featuredBooks.map((book) => (
-                          <ProductCard key={book.id} product={book} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {featuredStationery.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-bold mb-6 text-center lg:text-left">
-                        Creative Tools
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {featuredStationery.map((item) => (
-                          <ProductCard key={item.id} product={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {featuredBooks.map((book) => (
+                    <ProductCard
+                      key={book.id}
+                      product={book}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  ))}
+                  {featuredStationery.map((item) => (
+                    <ProductCard
+                      key={item.id}
+                      product={item}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  ))}
                 </div>
               )}
             </>
@@ -291,9 +211,9 @@ export default function LandingPage() {
                 delivered to your inbox.
               </p>
               <Button
+                asChild
                 size="lg"
                 className="px-8 py-6 text-lg rounded-xl"
-                asChild
               >
                 <Link to="/register">
                   Join The Community <ArrowRight className="ml-2 w-5 h-5" />

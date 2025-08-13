@@ -12,11 +12,17 @@ import type {
   ProductFilters,
   PaginatedResponse,
   ApiErrorResponse,
+  CreateProductData,
+  UpdateProductData,
 } from "../types";
 
 import {
   fetchProducts as apiFetchProducts,
   fetchProductById as apiFetchProductById,
+  createProductText as apiCreateProductText,
+  uploadProductImages as apiUploadProductImages,
+  updateProduct as apiUpdateProduct,
+  deleteProduct as apiDeleteProduct,
 } from "../api/modules/product";
 
 export const ProductContext = createContext<ProductContextType | undefined>(
@@ -90,11 +96,94 @@ export function ProductProvider({ children }: ProductProviderProps) {
     }
   }, []);
 
-  /**
-   * Clears the single product state. Useful when navigating away from a detail page.
-   */
   const clearProduct = useCallback(() => {
     setProduct(null);
+  }, []);
+
+  const createProduct = useCallback(
+    async (data: CreateProductData): Promise<Product> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { images, ...textData } = data;
+
+        const textResponse = await apiCreateProductText(textData);
+        const newProduct = textResponse.product;
+
+        if (images && images.length > 0) {
+          const imageResponse = await apiUploadProductImages(
+            newProduct.id,
+            images
+          );
+          return imageResponse.product;
+        }
+
+        return newProduct;
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        const errorMessage = apiError.message || "Failed to create product.";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+  const updateProduct = useCallback(
+    async (productId: string, data: UpdateProductData): Promise<Product> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { images, ...textData } = data;
+
+        const textResponse = await apiUpdateProduct(productId, textData);
+        let updatedProduct = textResponse.product;
+
+        if (images && images.length > 0) {
+          const imageResponse = await apiUploadProductImages(
+            updatedProduct.id,
+            images
+          );
+          updatedProduct = imageResponse.product;
+        }
+
+        setProduct(updatedProduct);
+        setProducts((prev) =>
+          prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+        );
+
+        return updatedProduct;
+      } catch (err) {
+        const apiError = err as ApiErrorResponse;
+        const errorMessage = apiError.message || "Failed to update product.";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+  const deleteProduct = useCallback(async (productId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await apiDeleteProduct(productId);
+      setProducts((prev) => prev.filter((product) => product.id !== productId));
+      // If the deleted product is currently selected, clear it
+      setProduct((current) => (current?.id === productId ? null : current));
+      toast.success("Product deleted successfully.");
+    } catch (err) {
+      const apiError = err as ApiErrorResponse;
+      const errorMessage = apiError.message || "Failed to delete product.";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const value: ProductContextType = {
@@ -105,7 +194,10 @@ export function ProductProvider({ children }: ProductProviderProps) {
     error,
     fetchAllProducts,
     fetchProductById,
+    createProduct,
     clearProduct,
+    updateProduct,
+    deleteProduct,
     clearError,
   };
 

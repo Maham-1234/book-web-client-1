@@ -1,3 +1,5 @@
+import type { deleteProduct } from "@/api/modules/product";
+
 export interface User {
   id: string; // UUID
   firstName: string;
@@ -9,7 +11,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  avatar?: string; // Optional, can be null if not set
+  avatar?: string;
 }
 
 export interface Category {
@@ -41,6 +43,17 @@ export interface Product {
   category?: Category;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface InventoryTransaction {
+  id: string;
+  type: "in" | "out";
+  quantity: number;
+  reason: "restock" | "return" | "damage" | "initial";
+  productId: string;
+  orderId?: string | null;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
 }
 
 export interface CartItem {
@@ -82,9 +95,14 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
-export type Reviewer = Pick<User, "id" | "firstName">;
+export type Reviewer = Pick<User, "id" | "firstName" | "avatar">;
 
 export interface Review {
   id: string;
@@ -104,8 +122,14 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  data?: T[];
+  orders?: T[];
+  users?: T[];
+
   total: number;
+  totalOrders?: number;
+  totalUsers?: number;
+  totalProducts?: number;
   totalPages: number;
   currentPage: number;
 }
@@ -149,8 +173,9 @@ type StationeryData = Pick<
   Product,
   "name" | "description" | "price" | "sku" | "stock" | "categoryId" | "brand"
 > & { productType: "Stationary" };
-export type CreateProductData = BookData | StationeryData;
-
+export type CreateProductData = (BookData | StationeryData) & {
+  images?: File[];
+};
 export type UpdateProductData = Partial<CreateProductData>;
 
 export interface CreateCategoryData {
@@ -169,10 +194,6 @@ export interface UpdateCartItemData {
   quantity: number;
 }
 
-export interface CreateOrderData {
-  shippingAddress: ShippingAddress;
-}
-
 export interface CreateReviewData {
   productId: string;
   rating: number;
@@ -188,12 +209,18 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  allUsers: PaginatedResponse<User> | null;
+  isFetchingUsers: boolean;
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
-
+  fetchAllUsers: (page?: number, imit?: number) => Promise<void>;
+  updateUserAsAdmin: (
+    userId: string,
+    data: { isActive?: boolean }
+  ) => Promise<void>;
   clearError: () => void;
 }
 
@@ -201,11 +228,15 @@ export interface CartContextType {
   cart: Cart | null;
   isLoading: boolean;
   error: string | null;
-  fetchCart: () => Promise<void>;
-  addItem: (data: AddItemToCartData) => Promise<void>;
-  updateItem: (itemId: string, data: UpdateCartItemData) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
-  clearCart: () => Promise<void>;
+  itemCount: number | null;
+  cartTotal: number | null;
+  isUpdatingItem: string | null;
+  loadCart: () => Promise<void>;
+  addToCart: (productId: string, quantity: number) => Promise<void>;
+  updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: string) => Promise<void>;
+  emptyCart: () => Promise<void>;
+  clearError: () => void;
 }
 export interface ProductContextType {
   products: Product[];
@@ -215,19 +246,33 @@ export interface ProductContextType {
   error: string | null;
   fetchAllProducts: (filters?: ProductFilters) => Promise<void>;
   fetchProductById: (id: string) => Promise<void>;
-  clearProduct: () => void; // To clear the single product view
+  clearProduct: () => void;
+  updateProduct: (
+    productId: string,
+    data: UpdateProductData
+  ) => Promise<Product>;
+  createProduct: (data: CreateProductData) => Promise<Product>;
+  deleteProduct: (productId: string) => Promise<void>;
   clearError: () => void;
 }
 
 export interface OrderContextType {
   orders: Order[];
-  order: Order | null;
+  currentOrder: Order | null;
+  paginatedOrders: PaginatedResponse<Order> | null;
   isLoading: boolean;
+  isUpdating: boolean;
   error: string | null;
-  createOrder: (data: CreateOrderData) => Promise<Order | undefined>; // Returns the new order
-  fetchUserOrders: () => Promise<void>;
-  fetchOrderById: (orderId: string) => Promise<void>;
-  clearOrder: () => void;
+  placeOrder: (data: CreateOrderData) => Promise<Order>;
+  fetchMyOrders: () => Promise<void>;
+  fetchOrderDetails: (orderId: string) => Promise<void>;
+  fetchAllAdminOrders: (page?: number, limit?: number) => Promise<void>;
+  updateStatusAdmin: (
+    orderId: string,
+    status: Order["status"]
+  ) => Promise<void>;
+  clearCurrentOrder: () => void;
+  cancelUserOrder: (orderId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -236,8 +281,25 @@ export interface CategoryContextType {
   isLoading: boolean;
   error: string | null;
   fetchCategoryTree: () => Promise<void>;
+  createCategory: (data: CreateCategoryData) => Promise<void>;
+  updateCategory: (
+    categoryId: number,
+    data: UpdateCategoryData
+  ) => Promise<void>;
+  deleteCategory: (categoryId: number) => Promise<void>;
 }
 
+export interface ReviewContextType {
+  reviews: Review[];
+  isLoading: boolean;
+  error: string | null;
+  getReviews: (productId: string) => Promise<void>;
+  addReview: (data: CreateReviewData) => Promise<void>;
+  editReview: (reviewId: string, data: UpdateReviewData) => Promise<void>;
+  removeReview: (reviewId: string) => Promise<void>;
+
+  clearError: () => void;
+}
 export interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -266,3 +328,26 @@ export interface ProductFormValues {
   brand?: string;
   categoryId: number;
 }
+
+export type UpdateUserData = { isActive?: boolean };
+
+export interface CreateOrderData {
+  shippingAddress: ShippingAddress;
+  paymentIntentId: string;
+}
+export type CreateManualTransactionData = {
+  productId: string;
+  type: "in" | "out";
+  quantity: number;
+  reason: "restock" | "return" | "damage" | "initial";
+};
+export type InventoryContextType = {
+  transactions: InventoryTransaction[];
+  isLoading: boolean;
+  error: string | null;
+  clearError: () => void;
+  getProductTransactions: (productId: string) => Promise<void>;
+  addManualTransaction: (
+    data: CreateManualTransactionData
+  ) => Promise<InventoryTransaction | undefined>;
+};

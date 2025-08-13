@@ -23,7 +23,7 @@ type UpdateOrderStatusData = {
 export const createOrder = async (
   data: CreateOrderData
 ): Promise<OrderResponse> => {
-  return apiClient.post<OrderResponse, CreateOrderData>("/orders", data);
+  return apiClient.post<OrderResponse, CreateOrderData>("/order", data);
 };
 
 /**
@@ -31,7 +31,7 @@ export const createOrder = async (
  * @returns A list of the user's orders.
  */
 export const fetchUserOrders = async (): Promise<OrderListResponse> => {
-  return apiClient.get<OrderListResponse>("/orders");
+  return apiClient.get<OrderListResponse>("/order");
 };
 
 /**
@@ -42,7 +42,7 @@ export const fetchUserOrders = async (): Promise<OrderListResponse> => {
 export const fetchOrderById = async (
   orderId: string
 ): Promise<OrderResponse> => {
-  return apiClient.get<OrderResponse>(`/orders/${orderId}`);
+  return apiClient.get<OrderResponse>(`/order/${orderId}`);
 };
 
 /**
@@ -60,7 +60,9 @@ export const fetchAllOrders = async (
     limit: limit.toString(),
   });
   // Note: The backend route for this might be protected by admin middleware (e.g., /api/admin/orders)
-  return apiClient.get<AllOrdersResponse>(`/orders/all?${params.toString()}`);
+  return apiClient.get<AllOrdersResponse>(
+    `/order/admin/all?${params.toString()}`
+  );
 };
 
 /**
@@ -74,7 +76,23 @@ export const updateOrderStatus = async (
   data: UpdateOrderStatusData
 ): Promise<OrderResponse> => {
   return apiClient.put<OrderResponse, UpdateOrderStatusData>(
-    `/orders/${orderId}/status`,
+    `/order/admin/${orderId}/status`,
     data
   );
+};
+
+/**
+ * Cancels a user's order if it's within the allowed timeframe.
+ * @param orderId - The UUID of the order to cancel.
+ * @returns The updated order data with 'cancelled' status.
+ */
+export const cancelOrder = async (orderId: string): Promise<OrderResponse> => {
+  return apiClient.delete<OrderResponse>(`/order/${orderId}`);
+};
+
+export const createPaymentIntent = async (): Promise<{
+  clientSecret: string;
+}> => {
+  const response = await apiClient.post("/payment/create-payment-intent");
+  return response.clientSecret;
 };

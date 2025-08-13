@@ -6,15 +6,49 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/authContext.tsx";
 import { ThemeProvider } from "./contexts/themeContext.tsx";
 import { ProductProvider } from "./contexts/productContext.tsx";
+import { CategoryProvider } from "./contexts/categoryContext.tsx";
+import { ReviewProvider } from "./contexts/reviewContext.tsx";
+import { CartProvider } from "./contexts/cartContext.tsx";
+import { InventoryProvider } from "./contexts/inventoryContext.tsx";
+import { Toaster } from "react-hot-toast";
+import { OrderProvider } from "./contexts/orderContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <ProductProvider>
-          <ThemeProvider>
-            <App />
-          </ThemeProvider>
+          <CategoryProvider>
+            <ReviewProvider>
+              <CartProvider>
+                <OrderProvider>
+                  <InventoryProvider>
+                    {" "}
+                    <ThemeProvider>
+                      <App />
+                      <Toaster
+                        position="bottom-right"
+                        toastOptions={{
+                          duration: 3000,
+                          style: {
+                            background: "#363636",
+                            color: "#fff",
+                          },
+                          success: {
+                            duration: 2000,
+                            iconTheme: {
+                              primary: "green",
+                              secondary: "black",
+                            },
+                          },
+                        }}
+                      />
+                    </ThemeProvider>
+                  </InventoryProvider>
+                </OrderProvider>
+              </CartProvider>
+            </ReviewProvider>
+          </CategoryProvider>
         </ProductProvider>
       </AuthProvider>
     </BrowserRouter>

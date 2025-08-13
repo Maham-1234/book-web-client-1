@@ -4,6 +4,8 @@ import type {
   LoginData,
   RegisterData,
   UpdateProfileData,
+  PaginatedResponse,
+  UpdateUserData,
 } from "../../types";
 
 type AuthResponse = {
@@ -71,4 +73,24 @@ const API_BASE_URL =
 
 export const getGoogleAuthUrl = (): string => {
   return `${API_BASE_URL}/auth/google`;
+};
+
+export const fetchAllUsers = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<User>> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  return apiClient.get<PaginatedResponse<User>>(
+    `/auth/all?${params.toString()}`
+  );
+};
+
+export const updateUserAsAdmin = async (
+  userId: string,
+  data: UpdateUserData
+): Promise<{ user: User }> => {
+  return apiClient.put(`/auth/admin/updateUser/${userId}`, data);
 };
