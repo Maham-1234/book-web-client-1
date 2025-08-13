@@ -97,7 +97,7 @@ The backend server should now be running, typically on **`http://localhost:3000`
 
 Next, in a **separate terminal window**, set up the React client application.
 
-````bash
+```bash
 # 1. Clone the frontend repository into a folder named 'book-web-client'
 git clone https://github.com/Maham-1234/book-web-client-1.git book-web-client
 cd book-web-client
@@ -110,17 +110,19 @@ npm install
 cp .env.example .env
 
 # 4. Start the frontend development server
-npm run dev```
+npm run dev
+
+```
+
 The frontend application should now be running, typically on **`http://localhost:5173`**. You can now access the application in your browser.
 
 ---
 
-## 🔑 Environment Variables
+# 🔑 Environment Variables
 
 You must create `.env` files in both the `book-web-server` and `book-web-client` directories. Use the `.env.example` files in each repository as a template.
 
-### Backend (`book-web-server/.env`)
-````
+## Backend (`book-web-server/.env`)
 
 ### Server Configuration
 
