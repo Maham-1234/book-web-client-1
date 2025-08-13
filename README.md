@@ -120,7 +120,7 @@ The frontend application should now be running, typically on **`http://localhost
 
 # 🔑 Environment Variables
 
-You must create `.env` files in both the `book-web-server` and `book-web-client` directories. Use the `.env.example` files in each repository as a template.
+You must create `.env` files in both the `book-web-server` and `book-web-client` directories.
 
 ## Backend (`book-web-server/.env`)
 
